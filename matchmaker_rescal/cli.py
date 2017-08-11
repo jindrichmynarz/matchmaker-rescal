@@ -57,7 +57,7 @@ def parse_headers(path):
 
 if __name__ == "__main__":
     # Logging configuration
-    logging.basicConfig(level = logging.INFO, stream = sys.stdout,
+    logging.basicConfig(level = logging.WARNING, stream = sys.stdout,
                         format = "%(asctime)s %(name)s %(levelname)-8s %(message)s",
                         datefmt = "%Y-%m-%d %H:%M:%S")
 
