@@ -66,7 +66,7 @@ def long_tail_bidders(ground_truth, bidder_indices, long_tail = 0.8):
     :param long_tail: Ratio of contracts awards that forms the long tail.
     :returns: Array of indices of bidders forming the long tail.
     """
-    awards = np.count_nonzero(ground_truth.T[bidder_indices].toarray(), axis = 1)
+    awards = ground_truth.T[bidder_indices].getnnz(axis = 1)
     short_head = np.sum(awards) * (1 - long_tail)
     sort_by_awards = awards.argsort()[::-1] # Sort award counts in the descending order
     long_tail_indices = np.where(np.cumsum(awards[sort_by_awards]) > short_head)
