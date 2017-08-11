@@ -72,13 +72,12 @@ def long_tail_bidders(ground_truth, bidder_indices, long_tail = 0.8):
     long_tail_indices = np.where(np.cumsum(awards[sort_by_awards]) > short_head)
     return bidder_indices[sort_by_awards][long_tail_indices]
 
-def long_tail_percentage(top_predictions, bidder_indices, long_tail_bidders):
+def long_tail_percentage(top_predictions, long_tail_bidders):
     """
     Compute the share of predicted bidders that are from the long tail.
 
     :param top_predictions: nxk matrix of top-k predictions for given n.
-    :param bidder_indices: Array of indices of bidders.
     :param long_tail_bidders: Array of indices of bidders forming the long tail.
     :returns: Long tail percentage from the interval [0, 1].
     """
-    return np.sum(np.isin(top_predictions, long_tail_bidders)) / bidder_indices.size
+    return np.sum(np.isin(top_predictions, long_tail_bidders)) / np.count_nonzero(top_predictions)
