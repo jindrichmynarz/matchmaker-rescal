@@ -11,6 +11,7 @@ from rescal import rescal_als
 from scipy.sparse import coo_matrix
 
 _log = logging.getLogger("matchmaker-rescal.evaluation")
+_log.setLevel(logging.INFO)
 
 def matrix_density(matrix):
     return matrix.nnz / np.prod(matrix.shape)
@@ -97,8 +98,8 @@ def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10)
     predictions[~bidder_mask] = -inf # Set predictions for links to non-bidders to -infinity.
     return np.fliplr(predictions.argsort()[:,-top_k:])
 
-def run_fold(args, fold_indices):
-    _log.info("Running a fold...")
+def run_fold(index, args, fold_indices):
+    _log.info("Running the fold %d/%d..." % (index, args.config["evaluation"]["folds"]))
 
     config = args.config["matchmaker"]
     # Create a tensor for the fold
@@ -133,7 +134,7 @@ def run(args):
     shuffled_ground_truth = np.random.permutation(np.stack(args.ground_truth.nonzero(), axis = 1))
     folds = map(fold_to_indices, np.array_split(shuffled_ground_truth, number_of_folds))
     # Compute the predictions for each fold
-    predictions = [run_fold(args, fold_indices) for fold_indices in folds]
+    predictions = [run_fold(index + 1, args, fold_indices) for index, fold_indices in enumerate(folds)]
     
     # Merge predictions and ranks from each fold
     top_predictions = np.concatenate([fold_predictions[0] for fold_predictions in predictions])
@@ -145,7 +146,7 @@ def run(args):
         "mean_reciprocal_rank": metrics.mean_reciprocal_rank(ranks),
         "catalog_coverage": metrics.catalog_coverage(top_predictions, bidder_indices),
         "prediction_coverage": metrics.prediction_coverage(top_predictions, bidder_indices),
-        "long_tail_percentage": metrics.long_tail_percentage(top_predictions, bidder_indices, long_tail_bidders)
+        "long_tail_percentage": metrics.long_tail_percentage(top_predictions, long_tail_bidders)
     }
 
     # Save the evaluation results
