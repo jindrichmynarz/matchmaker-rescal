@@ -1,0 +1,1 @@
+-e git+https://github.com/mnick/rescal.py.git#egg=rescal
