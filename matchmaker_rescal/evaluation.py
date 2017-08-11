@@ -94,7 +94,7 @@ def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10)
     predictions = A[contract_indices].dot(R_ground_truth.dot(A.T))
     bidder_mask = np.zeros(predictions.shape, dtype = bool)
     bidder_mask[:,bidder_indices] = True
-    predictions[~bidder_mask] = float("inf") # Set predictions for links to non-bidders to -infinity.
+    predictions[~bidder_mask] = -float("inf") # Set predictions for links to non-bidders to -infinity.
     return np.fliplr(predictions.argsort()[:,-top_k:])
 
 def run_fold(index, args, fold_indices):
