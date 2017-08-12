@@ -7,7 +7,7 @@ def rank_predictions(top_predictions, fold_indices):
     """
     Rank top predictions given ground truth.
 
-    :param top_predictions: nxk matrix of top-k predictions for given n.
+    :param top_predictions: n × k matrix of top-k predictions for given n.
     :param fold_indices: Tuple matching contracts indices to winner indices by order.
     :returns: List of arrays with the ranks of the winnings bidders.
     """
@@ -37,7 +37,7 @@ def catalog_coverage(top_predictions, bidder_indices):
     """
     Compute the share of distinct predicted bidders out of all bidders.
 
-    :param top_predictions: nxk matrix of top-k predictions for given n.
+    :param top_predictions: n × k matrix of top-k predictions for given n.
     :param bidder_indices: Array of indices of all bidders.
     :returns: Catalog coverage from the interval [0, 1].
     """
@@ -49,7 +49,7 @@ def prediction_coverage(top_predictions, bidder_indices):
     """
     Compute the share of contracts for which a bidder is recommended.
 
-    :param top_predictions: nxk matrix of top-k predictions for given n.
+    :param top_predictions: n × k matrix of top-k predictions for given n.
     :param bidder_indices: Array of indices of all bidders.
     :returns: Prediction coverage from the interval [0, 1].
     """
@@ -76,7 +76,7 @@ def long_tail_percentage(top_predictions, long_tail_bidders):
     """
     Compute the share of predicted bidders that are from the long tail.
 
-    :param top_predictions: nxk matrix of top-k predictions for given n.
+    :param top_predictions: n × k matrix of top-k predictions for given n.
     :param long_tail_bidders: Array of indices of bidders forming the long tail.
     :returns: Long tail percentage from the interval [0, 1].
     """
