@@ -6,6 +6,7 @@ import logging
 import metrics
 import numpy as np
 import uuid
+from functools import partial
 from rescal import rescal_als
 from scipy.sparse import coo_matrix
 
@@ -37,7 +38,7 @@ def random_truth(ground_truth, contract_indices):
 
     :param ground_truth: nxn matrix
     :param contract_indices: Array of indices of contracts of length m.
-    :returns: mxn matrix of random predictions.
+    :returns: m × n matrix of random predictions.
     """
     return random_matrix(ground_truth.shape[0], matrix_density(ground_truth))[contract_indices].toarray()
 
@@ -45,8 +46,8 @@ def fold_tensor(ground_truth, slices, fold_indices):
     """
     Make a tensor for a fold by removing the tested relations from its ground truth.
 
-    :param ground_truth: nxn matrix with the tested relations.
-    :param slices: List of nxn matrices to include as slices in the tensor.
+    :param ground_truth: n × n matrix with the tested relations.
+    :param slices: List of n × n matrices to include as slices in the tensor.
     :returns: List of nxn matrices, where the ground truth without the tested relations is the first.
     """
     fold_truth = ground_truth.copy()
@@ -63,8 +64,8 @@ def run_rescal(tensor, config):
     :param config: Dict of parameters for RESCAL, includes "rank", "init", "conv", and "regularization".
                    "regularization" includes "lambdaA", "lambdaR", "lambdaV".
                    See DEFAULT_CONFIG in cli.py for default configuration values.
-    :returns: (A, R) tuple where A is an nxr matrix with interactions of n entities with r latent components.
-              R is a list of rxr matrices with interactions of latent components in the individual matrix
+    :returns: (A, R) tuple where A is an n × r matrix with interactions of n entities with r latent components.
+              R is a list of r × r matrices with interactions of latent components in the individual matrix
               slices. R[0] are the interactions for the ground truth.
     """
     rank = config["rank"]
@@ -78,24 +79,39 @@ def run_rescal(tensor, config):
             compute_fit = False)
     return (A, R)
 
+def predict_bidders_for_contract(A, A_T, R_ground_truth, bidder_mask, top_k, contract):
+    """
+    Predict top-k recommendations of bidders for a contract given a RESCAL decomposition.
+
+    :param contract: Index of a contract.
+    :param A: n × r matrix with interactions of n entities with r latent components.
+    :param A_T: Transposed matrix A.
+    :param R_ground_truth: r × r matrix with interactions of latent components for the ground_truth.
+    :param bidder_mask: A boolean array masking non-bidder indices.
+    :param top_k: How many predictions should be produced.
+    :returns: Array of top-k predictions.
+    """
+    predictions = A[contract].dot(R_ground_truth).dot(A_T)
+    predictions[~bidder_mask] = -float("inf") # Set predictions for links to non-bidders to -infinity.
+    return predictions.argsort()[-top_k:][::-1]
+
 def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10):
     """
     Predict top-k recommendations of bidders given a RESCAL decomposition.
 
-    :param A: nxr matrix with interactions of n entities with r latent components.
-    :param R_ground_truth: rxr matrix with interactions of latent components for the ground_truth.
+    :param A: n × r matrix with interactions of n entities with r latent components.
+    :param R_ground_truth: r × r matrix with interactions of latent components for the ground_truth.
     :param fold_indices: Tuple matching contracts indices to winner indices by order.
     :param bidder_indices: Indices of all bidders.
     :param top_k: Number of top predictions to consider.
-    :returns: n x top_k matrix where each row contains indices of the top predicted bidder 
+    :returns: n × top_k matrix where each row contains indices of the top predicted bidder.
     """
     contract_indices, bidder_indices = fold_indices
+    bidder_mask = np.zeros(A.shape[0], dtype = bool)
+    bidder_mask[bidder_indices] = True
     # Reconstruct predictions slice for the contract indices
-    predictions = A[contract_indices].dot(R_ground_truth.dot(A.T))
-    bidder_mask = np.zeros(predictions.shape, dtype = bool)
-    bidder_mask[:,bidder_indices] = True
-    predictions[~bidder_mask] = -float("inf") # Set predictions for links to non-bidders to -infinity.
-    return np.fliplr(predictions.argsort()[:,-top_k:])
+    predict_fn = partial(predict_bidders_for_contract, A, A.T, R_ground_truth, bidder_mask, top_k)
+    return np.vstack(map(predict_fn, contract_indices))
 
 def run_fold(index, args, fold_indices):
     _log.info("Running the fold %d/%d..." % (index, args.config["evaluation"]["folds"]))
@@ -113,17 +129,17 @@ def run_fold(index, args, fold_indices):
 
 def fold_to_indices(fold):
     """
-    Helper function that transposes 2xn matrix fold into two arrays in the (n, n) tuple,
+    Helper function that transposes 2 × n matrix fold into two arrays in the (n, n) tuple,
     which is used for indexing.
 
-    :param fold: 2xn matrix with the indices of ground truth in the given fold.
+    :param fold: 2 × n matrix with the indices of ground truth in the given fold.
     """
     transposed = fold.T
     return (transposed[0], transposed[1])
 
 def run(args):
     _log.info("Running evaluation...")
-    _log.info("Tensor: %d x %d x %d" % (args.ground_truth.shape + (len(args.slices) + 1,)))
+    _log.info("Tensor: %d × %d × %d" % (args.ground_truth.shape + (len(args.slices) + 1,)))
 
     config = args.config
     number_of_folds = config["evaluation"]["folds"]
@@ -134,7 +150,7 @@ def run(args):
     folds = map(fold_to_indices, np.array_split(shuffled_ground_truth, number_of_folds))
     # Compute the predictions for each fold
     predictions = [run_fold(index + 1, args, fold_indices) for index, fold_indices in enumerate(folds)]
-    
+
     # Merge predictions and ranks from each fold
     top_predictions = np.concatenate([fold_predictions[0] for fold_predictions in predictions])
     ranks = np.concatenate([fold_predictions[1] for fold_predictions in predictions])
