@@ -93,7 +93,8 @@ def predict_bidders_for_contract(A, A_T, R_ground_truth, bidder_mask, top_k, con
     """
     predictions = A[contract].dot(R_ground_truth).dot(A_T)
     predictions[~bidder_mask] = -float("inf") # Set predictions for links to non-bidders to -infinity.
-    return predictions.argsort()[-top_k:][::-1]
+    # .copy() breaks the link to predictions, allowing it to be GC-ed.
+    return predictions.argsort()[-top_k:][::-1].copy()
 
 def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10):
     """
