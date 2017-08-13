@@ -49,7 +49,7 @@ def parse_matrix_market(path):
 
 def parse_config(path):
     with open(path, "r") as f:
-        return merge(DEFAULT_CONFIG, edn_format.loads(f.read()))
+        return merge(DEFAULT_CONFIG, dict(edn_format.loads(f.read())))
 
 def filter_entities(predicate, lines):
     return np.array([idx for idx, line in enumerate(lines) if predicate(line)], dtype = np.int32)
