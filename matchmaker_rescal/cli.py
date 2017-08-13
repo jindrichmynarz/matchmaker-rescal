@@ -15,6 +15,7 @@ DEFAULT_CONFIG = {
         "top-k": 10
     },
     "matchmaker": {
+        "type": "rescal",
         "conv": 0.001,
         "init": "nvecs",
         "rank": 50,
@@ -41,7 +42,7 @@ def parse_matrix_market(path):
 
 def parse_config(path):
     with open(path, "r") as f:
-        return merge(edn_format.loads(f.read()), DEFAULT_CONFIG)
+        return merge(DEFAULT_CONFIG, edn_format.loads(f.read()))
 
 def filter_entities(predicate, lines):
     return np.array([idx for idx, line in enumerate(lines) if predicate(line)], dtype = np.int32)
