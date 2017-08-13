@@ -128,6 +128,16 @@ def run_fold(index, args, fold_indices):
     ranks = metrics.rank_predictions(top_predictions, fold_indices)
     return (top_predictions, ranks)
 
+def run_random_fold(index, args, fold_indices):
+    _log.info("Running the fold %d/%d with random matches..." % (index, args.config["evaluation"]["folds"]))
+
+    bidder_indices = args.headers["bidders"]
+    top_k = args.config["evaluation"]["top-k"]
+    top_predictions = np.vstack((np.random.permutation(bidder_indices)[:top_k].copy()
+                                 for contract in fold_indices[0]))
+    ranks = metrics.rank_predictions(top_predictions, fold_indices)
+    return (top_predictions, ranks)
+
 def fold_to_indices(fold):
     """
     Helper function that transposes 2 × n matrix fold into two arrays in the (n, n) tuple,
@@ -146,15 +156,19 @@ def run(args):
     number_of_folds = config["evaluation"]["folds"]
     bidder_indices = args.headers["bidders"]
     long_tail_bidders = metrics.long_tail_bidders(args.ground_truth, bidder_indices)
+    run_fn = {
+        "rescal": run_fold,
+        "random": run_random_fold
+    }[config["matchmaker"]["type"]]
 
     shuffled_ground_truth = np.random.permutation(np.stack(args.ground_truth.nonzero(), axis = 1))
     folds = map(fold_to_indices, np.array_split(shuffled_ground_truth, number_of_folds))
     # Compute the predictions for each fold
-    predictions = [run_fold(index + 1, args, fold_indices) for index, fold_indices in enumerate(folds)]
+    predictions = [run_fn(index + 1, args, fold_indices) for index, fold_indices in enumerate(folds)]
 
     # Merge predictions and ranks from each fold
     top_predictions = np.concatenate([fold_predictions[0] for fold_predictions in predictions])
-    ranks = np.concatenate([fold_predictions[1] for fold_predictions in predictions])
+    ranks = sum([fold_predictions[1] for fold_predictions in predictions], [])
 
     # Compute evaluation metrics
     results = {

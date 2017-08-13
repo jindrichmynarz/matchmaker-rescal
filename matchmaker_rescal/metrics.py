@@ -3,6 +3,16 @@ Metrics for evaluation of the predictions of RESCAL-based matchmakers.
 """
 import numpy as np
 
+def winner_rank(winner, predictions):
+    """
+    Compute the rank of the `winner` in `predictions`.
+
+    :param winner: Index of the winning bidder.
+    :param predictions: Indices of predicted bidders.
+    :returns: List with the rank. Rank is 1-offset. If the winner is not found, the list is empty.
+    """
+    return [np.argmax(predictions == winner) + 1] if winner in predictions else []
+
 def rank_predictions(top_predictions, fold_indices):
     """
     Rank top predictions given ground truth.
@@ -11,7 +21,7 @@ def rank_predictions(top_predictions, fold_indices):
     :param fold_indices: Tuple matching contracts indices to winner indices by order.
     :returns: List of arrays with the ranks of the winnings bidders.
     """
-    return [np.argwhere(predictions == winner)[:1]
+    return [winner_rank(winner, predictions)
             for predictions, winner in zip(top_predictions, fold_indices[1])]
 
 def hit_rate(ranks):
@@ -31,7 +41,7 @@ def mean_reciprocal_rank(ranks):
     :param ranks: List of arrays with the ranks of the winning bidders.
     :returns: Mean reciprocal rank from the interval [0, 1].
     """
-    return np.mean([1/rank[0][0] if rank else 0 for rank in ranks])
+    return np.mean([1/rank[0] if rank else 0 for rank in ranks])
 
 def catalog_coverage(top_predictions, bidder_indices):
     """
