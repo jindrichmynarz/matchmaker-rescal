@@ -13,35 +13,6 @@ from scipy.sparse import coo_matrix
 _log = logging.getLogger("matchmaker-rescal.evaluation")
 _log.setLevel(logging.INFO)
 
-def matrix_density(matrix):
-    return matrix.nnz / np.prod(matrix.shape)
-
-def matrix_sparsity(matrix):
-    return 1 - matrix_density(matrix)
-
-def random_matrix(n, density = 0.01):
-    """
-    Create a random square matrix of 0s and 1s given size `n` and density.
-
-    :param n: Rank of the square matrix to create.
-    :param density: Expected density of the created matrix.
-    :returns: nxn CSR matrix with random values from {0, 1}.
-    """
-    elements = int(n ** 2 * density)
-    idxs = np.random.randint(n, size = (2, elements))
-    data = np.random.randint(2, size = elements, dtype = np.int32)
-    return coo_matrix((data, idxs), (n, n)).tocsr()
-
-def random_truth(ground_truth, contract_indices):
-    """
-    Create random matrix for ground truth based on the actual ground truth.
-
-    :param ground_truth: nxn matrix
-    :param contract_indices: Array of indices of contracts of length m.
-    :returns: m × n matrix of random predictions.
-    """
-    return random_matrix(ground_truth.shape[0], matrix_density(ground_truth))[contract_indices].toarray()
-
 def fold_tensor(ground_truth, slices, fold_indices):
     """
     Make a tensor for a fold by removing the tested relations from its ground truth.
