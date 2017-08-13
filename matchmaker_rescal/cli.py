@@ -2,6 +2,7 @@
 Command-line interface for evaluation of the RESCAL-based matchmakers.
 """
 import argparse
+import collections
 import edn_format
 import evaluation
 import logging
@@ -31,7 +32,7 @@ def merge_key(k, d1, d2):
     """
     Merge objects `d1` and `d2` for given key `k`.
     """
-    is_dict = lambda x: isinstance(x, dict)
+    is_dict = lambda x: isinstance(x, collections.Mapping)
     all_dicts = lambda *x: all(map(is_dict, x))
     if k in d2:
         return merge(d1[k], d2[k]) if all_dicts(d1[k], d2[k]) else d2[k]
