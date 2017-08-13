@@ -27,15 +27,22 @@ DEFAULT_CONFIG = {
     }
 }
 
+def merge_key(k, d1, d2):
+    """
+    Merge objects `d1` and `d2` for given key `k`.
+    """
+    is_dict = lambda x: isinstance(x, dict)
+    all_dicts = lambda *x: all(map(is_dict, x))
+    if k in d2:
+        return merge(d1[k], d2[k]) if all_dicts(d1[k], d2[k]) else d2[k]
+    else:
+        return d1[k]
+
 def merge(d1, d2):
     """
-    Deep merge dictionaries `d1` and `d2`.
+    Deep merge dictionaries `d1` and `d2`. Values in `d2` are preferred.
     """
-    return {
-	k: merge(d1[k], d2[k])
-        if k in d1 and isinstance(d1[k], dict) and isinstance(d2[k], dict) else d2[k]
-        for k in d2
-    }
+    return {k: merge_key(k, d1, d2) for k in d1}
 
 def parse_matrix_market(path):
     return mmread(path).tocsr()
