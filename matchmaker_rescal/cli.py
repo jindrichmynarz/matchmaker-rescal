@@ -49,10 +49,9 @@ def filter_entities(predicate, lines):
 def parse_headers(path):
     with open(path, "r") as f:
         lines = f.readlines()
-        # FIXME: Abusing IRI opacity for quick'n'dirty identification of bidders and contracts
+        # FIXME: Abusing IRI opacity for quick'n'dirty identification of bidders. 
         return {
             "bidders": filter_entities(lambda line: "/business-entity/" in line, lines),
-            "contracts": filter_entities(lambda line: "/lot/" in line, lines) 
         }
 
 if __name__ == "__main__":
