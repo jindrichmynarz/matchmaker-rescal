@@ -6,27 +6,10 @@ import collections
 import edn_format
 import evaluation
 import logging
+import os
 import numpy as np
 import sys
 from scipy.io import mmread
-
-DEFAULT_CONFIG = {
-    "evaluation": {
-        "folds": 5,
-        "top-k": 10
-    },
-    "matchmaker": {
-        "type": "rescal",
-        "conv": 0.001,
-        "init": "nvecs",
-        "rank": 50,
-        "regularization": {
-            "lambdaA": 0,
-            "lambdaR": 0,
-            "lambdaV": 0
-        }
-    }
-}
 
 def merge_key(k, d1, d2):
     """
@@ -48,9 +31,12 @@ def merge(d1, d2):
 def parse_matrix_market(path):
     return mmread(path).tocsr()
 
-def parse_config(path):
+def load_edn(path):
     with open(path, "r") as f:
-        return merge(DEFAULT_CONFIG, dict(edn_format.loads(f.read())))
+        return edn_format.loads(f.read())
+
+def parse_config(path):
+    return merge(load_edn("config.edn"), load_edn(path))
 
 def filter_entities(predicate, lines):
     return np.array([idx for idx, line in enumerate(lines) if predicate(line)], dtype = np.int32)
@@ -80,7 +66,7 @@ if __name__ == "__main__":
                         required = True, type = parse_headers,
                         help = "Line-separated IRIs of entities, where line number is the entity's index.")
     parser.add_argument("-c", "--config",
-                        type = parse_config, default = DEFAULT_CONFIG,
+                        type = parse_config, default = {},
                         help = "EDN configuration")
     args = parser.parse_args()
     evaluation.run(args)
