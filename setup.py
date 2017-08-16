@@ -1,4 +1,8 @@
+import sys
 from setuptools import setup
+
+if sys.version_info < (3, 4):
+    sys.exit("Only Python version 3.4 or newer are supported.")
 
 setup(
     name = "matchmaker_rescal",
