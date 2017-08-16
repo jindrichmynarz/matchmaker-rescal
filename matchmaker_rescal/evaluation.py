@@ -86,7 +86,7 @@ def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10)
     return np.vstack(map(predict_fn, contract_indices))
 
 def run_fold(index, args, fold_indices):
-    _log.info("Running the fold %d/%d..." % (index, args.config["evaluation"]["folds"]))
+    _log.info("Running the fold {}/{}...".format(index, args.config["evaluation"]["folds"]))
 
     config = args.config["matchmaker"]
     # Create a tensor for the fold
@@ -100,7 +100,7 @@ def run_fold(index, args, fold_indices):
     return (top_predictions, ranks)
 
 def run_random_fold(index, args, fold_indices):
-    _log.info("Running the fold %d/%d with random matches..." % (index, args.config["evaluation"]["folds"]))
+    _log.info("Running the fold {}/{} with random matches...".format(index, args.config["evaluation"]["folds"]))
 
     bidder_indices = args.headers["bidders"]
     top_k = args.config["evaluation"]["top-k"]
@@ -121,15 +121,15 @@ def fold_to_indices(fold):
 
 def run(args):
     _log.info("Running evaluation...")
-    _log.info("Tensor: %d × %d × %d" % (args.ground_truth.shape + (len(args.slices) + 1,)))
+    _log.info("Tensor: {} × {} × {}".format(args.ground_truth.shape + (len(args.slices) + 1,)))
 
     config = args.config
     number_of_folds = config["evaluation"]["folds"]
     bidder_indices = args.headers["bidders"]
     long_tail_bidders = metrics.long_tail_bidders(args.ground_truth, bidder_indices)
     run_fn = {
-        "rescal": run_fold,
-        "random": run_random_fold
+        "random": run_random_fold,
+        "rescal": run_fold
     }[config["matchmaker"]["type"]]
 
     shuffled_ground_truth = np.random.permutation(np.stack(args.ground_truth.nonzero(), axis = 1))
@@ -158,4 +158,4 @@ def run(args):
                    "results": results
                }))
 
-    _log.info("Evaluation results written to %s." % file_name)
+    _log.info("Evaluation results written to {}.".format(file_name))
