@@ -6,8 +6,9 @@ import collections
 import edn_format
 import evaluation
 import logging
-import os
 import numpy as np
+import os
+import pkg_resources
 import sys
 from scipy.io import mmread
 
@@ -36,7 +37,8 @@ def load_edn(path):
         return edn_format.loads(f.read())
 
 def parse_config(path):
-    return merge(load_edn("config.edn"), load_edn(path))
+    default_config = pkg_resources.resource_filename("resources", "config.edn")
+    return merge(load_edn(default_config), load_edn(path))
 
 def filter_entities(predicate, lines):
     return np.array([idx for idx, line in enumerate(lines) if predicate(line)], dtype = np.int32)
