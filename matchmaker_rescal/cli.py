@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Command-line interface for evaluation of the RESCAL-based matchmakers.
 """
