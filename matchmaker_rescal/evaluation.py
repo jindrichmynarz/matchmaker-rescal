@@ -120,7 +120,8 @@ def fold_to_indices(fold):
 
 def run(args):
     _log.info("Running evaluation...")
-    _log.info("Tensor: {} × {} × {}".format(*args.ground_truth.shape, len(args.slices) + 1))
+    m, n = args.ground_truth.shape
+    _log.info("Tensor: {} × {} × {}".format(m, n, len(args.slices) + 1))
 
     config = args.config
     number_of_folds = config["evaluation"]["folds"]
