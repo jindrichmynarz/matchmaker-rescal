@@ -41,17 +41,6 @@ def parse_config(path):
     default_config = pkg_resources.resource_filename("resources", "config.edn")
     return merge(load_edn(default_config), load_edn(path))
 
-def filter_entities(predicate, lines):
-    return np.array([idx for idx, line in enumerate(lines) if predicate(line)], dtype = np.int32)
-
-def parse_headers(path):
-    with open(path, "r") as f:
-        lines = f.readlines()
-        # FIXME: Abusing IRI opacity for quick'n'dirty identification of bidders. 
-        return {
-            "bidders": filter_entities(lambda line: "/business-entity/" in line, lines),
-        }
-
 if __name__ == "__main__":
     # Logging configuration
     logging.basicConfig(level = logging.WARNING, stream = sys.stdout,
@@ -65,9 +54,6 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--slices", 
                         nargs = "*", type = parse_matrix_market,
                         help = "Matrices for tensor slices")
-    parser.add_argument("--headers",
-                        required = True, type = parse_headers,
-                        help = "Line-separated IRIs of entities, where line number is the entity's index.")
     parser.add_argument("-c", "--config",
                         type = parse_config, default = {},
                         help = "EDN configuration")

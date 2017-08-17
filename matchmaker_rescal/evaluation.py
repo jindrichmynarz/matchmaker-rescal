@@ -85,7 +85,7 @@ def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10)
     predict_fn = partial(predict_bidders_for_contract, A, A.T, R_ground_truth, bidder_mask, top_k)
     return np.vstack(map(predict_fn, contract_indices))
 
-def run_fold(index, args, fold_indices):
+def run_fold(index, args, bidder_indices, fold_indices):
     _log.info("Running the fold {}/{}...".format(index, args.config["evaluation"]["folds"]))
 
     config = args.config["matchmaker"]
@@ -94,15 +94,14 @@ def run_fold(index, args, fold_indices):
     # Run RESCAL factorization
     A, R = run_rescal(tensor, config)
     # Reconstruct top predictions from the factor matrices
-    top_predictions = predict_bidders(A, R[0], fold_indices, args.headers["bidders"],
+    top_predictions = predict_bidders(A, R[0], fold_indices, bidder_indices,
                                       top_k = args.config["evaluation"]["top-k"])
     ranks = metrics.rank_predictions(top_predictions, fold_indices)
     return (top_predictions, ranks)
 
-def run_random_fold(index, args, fold_indices):
+def run_random_fold(index, args, bidder_indices, fold_indices):
     _log.info("Running the fold {}/{} with random matches...".format(index, args.config["evaluation"]["folds"]))
 
-    bidder_indices = args.headers["bidders"]
     top_k = args.config["evaluation"]["top-k"]
     top_predictions = np.vstack((np.random.permutation(bidder_indices)[:top_k].copy()
                                  for contract in fold_indices[0]))
@@ -125,7 +124,7 @@ def run(args):
 
     config = args.config
     number_of_folds = config["evaluation"]["folds"]
-    bidder_indices = args.headers["bidders"]
+    bidder_indices = np.unique(args.ground_truth.nonzero()[1])
     long_tail_bidders = metrics.long_tail_bidders(args.ground_truth, bidder_indices)
     run_fn = {
         "random": run_random_fold,
@@ -135,7 +134,8 @@ def run(args):
     shuffled_ground_truth = np.random.permutation(np.stack(args.ground_truth.nonzero(), axis = 1))
     folds = map(fold_to_indices, np.array_split(shuffled_ground_truth, number_of_folds))
     # Compute the predictions for each fold
-    predictions = [run_fn(index + 1, args, fold_indices) for index, fold_indices in enumerate(folds)]
+    predictions = [run_fn(index + 1, args, bidder_indices, fold_indices)
+                   for index, fold_indices in enumerate(folds)]
 
     # Merge predictions and ranks from each fold
     top_predictions = np.concatenate([fold_predictions[0] for fold_predictions in predictions])
