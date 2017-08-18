@@ -53,7 +53,7 @@ def catalog_coverage(top_predictions, bidder_indices):
     """
     return np.intersect1d(np.unique(top_predictions),
                           bidder_indices,
-                          assume_unique = True).size / len(bidder_indices)
+                          assume_unique = True).size / bidder_indices.size
 
 def prediction_coverage(top_predictions, bidder_indices):
     """
