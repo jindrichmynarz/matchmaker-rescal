@@ -67,14 +67,13 @@ def predict_bidders_for_contract(A, A_T, R_ground_truth, bidder_mask, top_k, con
     # .copy() breaks the link to predictions, allowing it to be GC-ed.
     return predictions.argsort()[-top_k:][::-1].copy()
 
-def predict_bidders(A, R_ground_truth, fold_indices, bidder_indices, top_k = 10):
+def predict_bidders(A, R_ground_truth, fold_indices, top_k = 10):
     """
     Predict top-k recommendations of bidders given a RESCAL decomposition.
 
     :param A: n × r matrix with interactions of n entities with r latent components.
     :param R_ground_truth: r × r matrix with interactions of latent components for the ground_truth.
     :param fold_indices: Tuple matching contracts indices to winner indices by order.
-    :param bidder_indices: Indices of all bidders.
     :param top_k: Number of top predictions to consider.
     :returns: n × top_k matrix where each row contains indices of the top predicted bidder.
     """
@@ -94,8 +93,7 @@ def run_fold(index, args, bidder_indices, fold_indices):
     # Run RESCAL factorization
     A, R = run_rescal(tensor, config)
     # Reconstruct top predictions from the factor matrices
-    top_predictions = predict_bidders(A, R[0], fold_indices, bidder_indices,
-                                      top_k = args.config["evaluation"]["top-k"])
+    top_predictions = predict_bidders(A, R[0], fold_indices, top_k = args.config["evaluation"]["top-k"])
     ranks = metrics.rank_predictions(top_predictions, fold_indices)
     return (top_predictions, ranks)
 
