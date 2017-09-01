@@ -2,6 +2,7 @@
     "evaluation" {
         "folds" 5
         "top-k" 10
+        "type" "n-folds"
     }
     "matchmaker" {
         "type" "rescal"
