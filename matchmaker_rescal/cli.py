@@ -58,4 +58,13 @@ if __name__ == "__main__":
                         type = parse_config, default = {},
                         help = "EDN configuration")
     args = parser.parse_args()
+
+    # Validate enumerations
+    matchmaker_type = args.config["matchmaker"]["type"]
+    if matchmaker_type not in {"random", "rescal"}:
+        raise ValueError("Matchmaker type {} is not supported!".format(matchmaker_type))
+    evaluation_type = args.config["evaluation"]["type"]
+    if evaluation_type not in {"n-folds", "time-series"}:
+        raise ValueError("Evaluation type {} is not supported!".format(evaluation_type))
+
     evaluation.run(args)
