@@ -52,7 +52,7 @@ if __name__ == "__main__":
                         required = True, type = parse_matrix_market,
                         help = "Matrix with the ground truth relation")
     parser.add_argument("-s", "--slices", 
-                        nargs = "*", type = parse_matrix_market,
+                        nargs = "*", type = parse_matrix_market, default = [],
                         help = "Matrices for tensor slices")
     parser.add_argument("-c", "--config",
                         type = parse_config, default = {},
