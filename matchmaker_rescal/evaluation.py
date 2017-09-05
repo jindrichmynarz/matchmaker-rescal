@@ -186,7 +186,8 @@ def run(args):
 
     _log.info("Running {} evaluation...".format(evaluation_type))
     m, n = args.ground_truth.shape
-    _log.info("Tensor: {} × {} × {}".format(m, n, len(args.slices) + 1))
+    slice_count = len(args.slices) + 1 if args.slices else 1 
+    _log.info("Tensor: {} × {} × {}".format(m, n, slice_count))
 
     number_of_folds = config["evaluation"]["folds"]
     bidder_indices = np.unique(args.ground_truth.nonzero()[1])
